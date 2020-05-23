@@ -10,7 +10,7 @@ class HomeStore {
     },
     {
       id: "1",
-      checked: false,
+      checked: true,
       title: "列表2"
     }
   ];
