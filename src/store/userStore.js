@@ -1,4 +1,4 @@
-import {observable, action} from "mobx";
+import {observable, action, computed} from "mobx";
 import LoginService from "../service/login";
 
 class UserStore {
@@ -7,6 +7,9 @@ class UserStore {
     name: "",
     err: {msg: ""}
   };
+  @computed get isLogin() {
+    return !!this.basicInfo.name;
+  }
   @action login(userInfo) {
     this.basicInfo = {
       ...this.basicInfo,
@@ -16,6 +19,7 @@ class UserStore {
       res => {
         this.basicInfo = {
           loading: false,
+          err: {msg: ""},
           ...res
         };
       },

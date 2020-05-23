@@ -11,9 +11,8 @@ class LoginPage extends Component {
   }
   render() {
     const {user, location} = this.props;
-    const isLogin = !!user.basicInfo.name;
     const {from = "/"} = location.state || {};
-    if (isLogin) {
+    if (user.isLogin) {
       return <Redirect to={from} />;
     }
     return (
