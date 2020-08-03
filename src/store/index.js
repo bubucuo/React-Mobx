@@ -1,8 +1,7 @@
 import home from "./homeStore";
 import user from "./userStore";
 
-const store = {
+export default {
   home,
   user
 };
-export default store;

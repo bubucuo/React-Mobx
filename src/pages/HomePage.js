@@ -9,7 +9,7 @@ class HomePage extends Component {
 
     return (
       <div>
-        <h3>MobxPage</h3>
+        <h3>HomePage</h3>
         <p>{home.num}</p>
         <button onClick={() => home.add()}>add</button>
         <button onClick={() => home.minus()}>minus</button>
