@@ -1,27 +1,32 @@
 import {observable, action, computed} from "mobx";
 
 class HomeStore {
-  @observable num = 0;
+  @observable count = 0;
   @observable todos = [
     {
       id: "0",
-      checked: false,
-      title: "列表1"
+      finised: false,
+      title: "事件1"
     },
     {
       id: "1",
-      checked: true,
-      title: "列表2"
+      finised: true,
+      title: "事件2"
+    },
+    {
+      id: "2",
+      finised: true,
+      title: "事件3"
     }
   ];
   @action add() {
-    this.num += 1;
+    this.count = this.count + 1;
   }
   @action minus() {
-    this.num -= 1;
+    this.count = this.count - 1;
   }
-  @computed get checkedLength() {
-    return this.todos.filter(todo => todo.checked).length;
+  @computed get unfinishedLength() {
+    return this.todos.filter(todo => !todo.finised).length;
   }
 }
 

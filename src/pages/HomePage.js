@@ -1,41 +1,43 @@
 import React, {Component} from "react";
+// import store from "../store/";
 import {observer, inject} from "mobx-react";
 
+// 做个加减法 done
+
+// 做个todo list done
 @inject("home")
 @observer
 class HomePage extends Component {
   render() {
+    // const {home} = store;
     const {home} = this.props;
-
     return (
       <div>
         <h3>HomePage</h3>
-        <p>{home.num}</p>
+        <p>{home.count}</p>
         <button onClick={() => home.add()}>add</button>
         <button onClick={() => home.minus()}>minus</button>
-        <h3>todo列表：</h3>
         <ul>
-          {home.todos.map(todo => (
-            <Todo key={todo.id} todo={todo} />
+          {home.todos.map(item => (
+            <Todo key={item.id} todo={item} />
           ))}
         </ul>
-        <p>被选中：{home.checkedLength}个！</p>
+        <p>未完成：{home.unfinishedLength}个</p>
       </div>
     );
   }
 }
+export default HomePage;
 
-function Todo({todo}) {
+const Todo = observer(({todo}) => {
   return (
     <li>
       <input
         type="checkbox"
-        checked={todo.checked}
-        onChange={() => (todo.checked = !todo.checked)}
+        checked={todo.finised}
+        onChange={() => (todo.finised = !todo.finised)}
       />
       {todo.title}
     </li>
   );
-}
-
-export default HomePage;
+});
