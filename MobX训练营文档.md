@@ -20,7 +20,7 @@
 
 **mobx**：提供observable、action、computed等API的库，类比redux。
 
-**mobx-react**：提供Provider、inject、observer、Observer、useObserver、useAsObservableSource、 useLocalStore等API的库。最新版的mobx-react中包括了mobx-react-lite。
+**mobx-react**：提供Provider、inject、observer、Observer、useObserver、useAsObservableSource、 useLocalStore等API的库。最新版的mobx-react v6+中包括了mobx-react-lite。
 
 **mobx-react-lite**：相当于是mobx-react的精简版，这个库只支持函数组件版，不支持Provider、inject，用户可以依靠React Context自己实现这两个API的功能。
 
