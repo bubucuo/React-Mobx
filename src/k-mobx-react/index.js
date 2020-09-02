@@ -1,4 +1,5 @@
 import React from "react";
+import {observer as observerLite, Observer} from "mobx-react-lite";
 import makeClassComponentObserver from "./makeClassComponentObserver";
 
 export const MobXProviderContext = React.createContext();
@@ -16,36 +17,28 @@ export function Provider({children, ...stores}) {
 
 // hoc
 // 把store注入组件
+export const inject = (...storesName) => component => {
+  let Injector = React.forwardRef((props, ref) => {
+    let newProps = {...props};
+    const context = React.useContext(MobXProviderContext);
+    Object.assign(newProps, context);
+    if (ref) {
+      newProps.ref = ref;
+    }
+    return React.createElement(component, newProps);
+  });
 
-export function inject(...storesName) {
-  return function(component) {
-    let Injector = React.forwardRef((props, ref) => {
-      let newProps = {...props};
-      const context = React.useContext(MobXProviderContext);
-      Object.assign(newProps, context);
-      if (ref) {
-        newProps.ref = ref;
-      }
-      return React.createElement(component, newProps);
-    });
-
-    return Injector;
-  };
-}
-// export const inject = (...storesName) => component => {
-//   let Injector = React.forwardRef((props, ref) => {
-//     let newProps = {...props};
-//     const context = React.useContext(MobXProviderContext);
-//     Object.assign(newProps, context);
-//     if (ref) {
-//       newProps.ref = ref;
-//     }
-//     return React.createElement(component, newProps);
-//   });
-
-//   return Injector;
-// };
+  return Injector;
+};
 
 export function observer(component) {
+  // 函数组件
+  if (
+    typeof component === "function" &&
+    (!component.prototype || !component.prototype.render)
+  ) {
+    return observerLite(component);
+  }
+
   return makeClassComponentObserver(component);
 }
