@@ -49,33 +49,33 @@ export default HomePage;
 // });
 
 // 方法2： observer component
-// const Todo = ({todo}) => {
-//   return (
-//     <Observer>
-//       {() => (
-//         <li>
-//           <input
-//             type="checkbox"
-//             checked={todo.finised}
-//             onChange={() => (todo.finised = !todo.finised)}
-//           />
-//           {todo.title}
-//         </li>
-//       )}
-//     </Observer>
-//   );
-// };
+const Todo = ({todo}) => {
+  return (
+    <Observer>
+      {() => (
+        <li>
+          <input
+            type="checkbox"
+            checked={todo.finised}
+            onChange={() => (todo.finised = !todo.finised)}
+          />
+          {todo.title}
+        </li>
+      )}
+    </Observer>
+  );
+};
 
 // 方法3： useObserver hook
-const Todo = ({todo}) => {
-  return useObserver(() => (
-    <li>
-      <input
-        type="checkbox"
-        checked={todo.finised}
-        onChange={() => (todo.finised = !todo.finised)}
-      />
-      {todo.title}
-    </li>
-  ));
-};
+// const Todo = ({todo}) => {
+//   return useObserver(() => (
+//     <li>
+//       <input
+//         type="checkbox"
+//         checked={todo.finised}
+//         onChange={() => (todo.finised = !todo.finised)}
+//       />
+//       {todo.title}
+//     </li>
+//   ));
+// };
