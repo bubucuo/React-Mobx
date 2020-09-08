@@ -1,10 +1,11 @@
 import React from "react";
-import HomePage from "./pages/HomePage";
+import TimerView from "./pages/TimerView";
+import appState from "./store/appState";
 
 export default function App(props) {
   return (
     <div>
-      <HomePage />
+      <TimerView appState={appState} />
     </div>
   );
 }
