@@ -7,25 +7,24 @@ class TodoList extends Component {
     return (
       <div>
         <h3>TodoList</h3>
-        <ul>
-          {this.props.todoStore.todos.map(todo => (
-            <Todo
-              key={todo.id}
-              todo={todo}
-              change={this.props.todoStore.change}
-            />
-          ))}
-        </ul>
-        <p>剩余任务事件：{this.props.todoStore.unfinishedCount}</p>
+        {this.props.todoStore.todos.map(todo => (
+          <Todo
+            key={todo.id}
+            todo={todo}
+            change={this.props.todoStore.change}
+          />
+        ))}
+        <p>未完成任务： {this.props.todoStore.unfinishedCount}个</p>
       </div>
     );
   }
 }
+
 export default TodoList;
 
 const Todo = observer(({todo, change}) => {
   return (
-    <li>
+    <div>
       <input
         type="checkbox"
         checked={todo.finished}
@@ -33,6 +32,6 @@ const Todo = observer(({todo, change}) => {
         onChange={() => change(todo)}
       />
       {todo.title}
-    </li>
+    </div>
   );
 });
