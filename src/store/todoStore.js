@@ -1,30 +1,37 @@
-import {observable, computed, autorun, action, configure} from "mobx";
+import {observable, configure, action, computed, autorun} from "mobx";
 
-// 配置configure， 不允许我们在动作（action）外修改状态
-configure({enforceActions: true});
+// 不允许在动作外部修改状态
+configure({enforceActions: "observed"});
 
 class TodoStore {
   @observable todos = [
     {
       id: "0",
+      // 标记任务是否完成
       finished: false,
-      title: "事件1"
+      // 定义任务名
+      title: "任务1"
     },
     {
       id: "1",
+      // 标记任务是否完成
       finished: true,
-      title: "事件2"
+      // 定义任务名
+      title: "任务2"
     },
     {
       id: "2",
+      // 标记任务是否完成
       finished: false,
-      title: "事件3"
+      // 定义任务名
+      title: "任务3"
     }
   ];
 
   @computed get unfinishedCount() {
     return this.todos.filter(todo => !todo.finished).length;
   }
+
   @action change(todo) {
     todo.finished = !todo.finished;
   }
@@ -33,7 +40,7 @@ class TodoStore {
 const todoStore = new TodoStore();
 
 autorun(() => {
-  console.log("剩余任务：", todoStore.unfinishedCount); //sy-log
+  console.log("剩余任务：" + todoStore.unfinishedCount + "个"); //sy-log
 });
 
 export default todoStore;
