@@ -1,7 +1,7 @@
-import React, {Component, Children} from "react";
-import {observer, Observer, useObserver} from "mobx-react";
+import React, {Component, Children, useReducer} from "react";
+// import {observer, Observer, useObserver} from "mobx-react";
 
-// import {useObserver} from "../k-mobx-react-lite/index";
+import {useObserver} from "../k-mobx-react-lite/index";
 
 // @observer
 class TodoList extends Component {
@@ -63,15 +63,22 @@ export default TodoList;
 
 // 方法3： useObserver hook
 const Todo = ({todo, change}) => {
-  return useObserver(() => (
-    <div>
-      <input
-        type="checkbox"
-        checked={todo.finished}
-        //onChange={() => (todo.finished = !todo.finished)}
-        onChange={() => change(todo)}
-      />
-      {todo.title}
-    </div>
-  ));
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+  return useObserver(
+    () => (
+      <div>
+        <input
+          type="checkbox"
+          checked={todo.finished}
+          onChange={() => change(todo)}
+        />
+        {todo.title}
+      </div>
+    ),
+    undefined,
+    {
+      //useForceUpdate: () => forceUpdate
+    }
+  );
 };
