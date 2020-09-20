@@ -1,4 +1,4 @@
-import React, {useRef, useReducer} from "react";
+import React, {useRef, useReducer, useEffect} from "react";
 import {Reaction} from "mobx";
 import {useForceUpdate} from "./utils";
 
@@ -11,15 +11,15 @@ export function useObserver(fn, baseComponentName = "observed", options = {}) {
 
   const wantedForceUpdateHook = options.useForceUpdate || useForceUpdate;
   const forceUpdate = wantedForceUpdateHook();
-  // 组件可以初次渲染，还可以更新
+  // 组件有初次渲染和更新，那这个时候reaction得做一个缓存，
   const reactionTrackingRef = useRef(null);
-  // todo 赋值reactionTrackingRef
+
   if (!reactionTrackingRef.current) {
     reactionTrackingRef.current = {
       reaction: new Reaction(
         observerComponentNameFor(baseComponentName),
         () => {
-          // 响应式函数
+          // 响应函数使用forceUpdate
           forceUpdate();
         }
       )
@@ -28,9 +28,19 @@ export function useObserver(fn, baseComponentName = "observed", options = {}) {
 
   const {reaction} = reactionTrackingRef.current;
 
+  useEffect(() => {
+    return () => {
+      // 清理reaction
+      reactionTrackingRef.current.reaction.dispose();
+      reactionTrackingRef.current = null;
+    };
+  }, []);
+
   let rendering;
+
   reaction.track(() => {
     rendering = fn();
   });
+
   return rendering;
 }

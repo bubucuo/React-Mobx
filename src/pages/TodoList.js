@@ -76,9 +76,7 @@ const Todo = ({todo, change}) => {
         {todo.title}
       </div>
     ),
-    undefined,
-    {
-      //useForceUpdate: () => forceUpdate
-    }
+    undefined
+    // {useForceUpdate: () => forceUpdate}
   );
 };
