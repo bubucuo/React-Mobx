@@ -591,7 +591,7 @@ export function observer(baseComponent, options = {}) {
 
 
 
-### lesson6-实现mobx-react-lite的useLocalStore
+### lesson7-实现mobx-react-lite的useLocalStore
 
 #### action
 
