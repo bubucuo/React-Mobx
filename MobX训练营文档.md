@@ -14,7 +14,7 @@
 
 5. [mobx-react-lite源码地址](https://github.com/mobxjs/mobx-react-lite)
 
-      
+  ​    
 
 ## 关于库
 
@@ -591,13 +591,109 @@ export function observer(baseComponent, options = {}) {
 
 
 
-### lesson7-实现mobx-react-lite的useLocalStore
+### lesson7-详解mobx-react-lite的useAsObservableSource的使用场景及实现
+
+**mobx-react-lite@1.3.0**
+
+在不改变原先逻辑的基础上使用mobX。
+
+```ts
+useAsObservableSource<T>(state: T): T
+```
 
 #### action
 
 action接收一个函数并返回具有同样签名的函数，但是用 `transaction`、`untracked` 和 `allowStateChanges` 包裹起来，尤其是 `transaction` 的自动应用会产生巨大的性能收益， 动作会分批处理变化并只在(最外层的)动作完成后通知计算值和反应。 这将确保在动作完成之前，在动作期间生成的中间值或未完成的值对应用的其余部分是不可见的。
 
 建议对任何修改 observables 或具有副作用的函数使用 `(@)action` 。 结合开发者工具的话，动作还能提供非常有用的调试信息。
+
+```js
+import { observable, action } from "mobx"
+
+const state = observable({ value: 0 })
+
+const increment = action(state => {
+    state.value++
+    state.value++
+})
+
+increment(state)
+```
+
+
+
+#### runInAction(fn)
+
+`runInAction` 是个简单的工具函数，它接收代码块并在(异步的)动作中执行。这对于即时创建和执行动作非常有用，例如在异步过程中。`runInAction(f)` 是 `action(f)()` 的语法糖。如参考上面action的例子，如果increment只用一次，不想再创建的话，就可以换成用下面的runInAction的写法了。
+
+```js
+import { observable } from "mobx"
+
+const state = observable({ value: 0 })
+
+runInAction(() => {
+    state.value++
+    state.value++
+})
+```
+
+再参考个异步的例子，使用async/await + runInAction：
+
+```jsx
+import { runInAction, makeAutoObservable } from "mobx"
+
+class Store {
+    githubProjects = []
+    state = "pending" // "pending" / "done" / "error"
+
+    constructor() {
+        makeAutoObservable(this)
+    }
+
+    fetchProjects() {
+        this.githubProjects = []
+        this.state = "pending"
+        try {
+            const projects = await fetchGithubProjectsSomehow()
+            const filteredProjects = somePreprocessing(projects)
+            runInAction(() => {
+                this.githubProjects = filteredProjects
+                this.state = "done"
+            })
+        } catch (e) {
+            runInAction(() => {
+                this.state = "error"
+            }
+        }
+    )
+}
+```
+
+
+
+#### 自己手动实现useAsObservableSource.js
+
+```js
+import React from "react";
+import {observable, runInAction} from "mobx";
+
+export function useAsObservableSource(current) {
+  const [res] = React.useState(() => observable(current));
+
+  runInAction(() => {
+    Object.assign(res, current);
+  });
+  return res;
+}
+```
+
+
+
+### lesson8-实现mobx-react-lite的useLocalStore
+
+```ts
+useLocalStore<T, S>(initializer: () => T, source?: S): T
+```
 
 
 
@@ -609,11 +705,7 @@ action接收一个函数并返回具有同样签名的函数，但是用 `transa
 
 
 
-#### runInAction(name?, thunk)
-
-`runInAction` 是个简单的工具函数，它接收代码块并在(异步的)动作中执行。这对于即时创建和执行动作非常有用，例如在异步过程中。`runInAction(f)` 是 `action(f)()` 的语法糖。
-
-
+#### 实现useLocalStore
 
 ```js
 import React from "react";
@@ -644,32 +736,72 @@ function wrapInTransaction(fn, context) {
 
 
 
-useAsObservableSource.js
+#### 例子
 
-```js
-import React, {useState} from "react";
-import {observable, runInAction} from "mobx";
+注意：useObserver能引起组件的整体渲染，如果想要局部控制的话，可以使用Observer Component。代码示例如下：
 
-export function useAsObservableSource(current) {
-  const [res] = useState(() => observable(current, {}, {deep: false}));
-  runInAction(() => {
-    Object.assign(res, current);
-  });
-  return res;
+```jsx
+import React from "react";
+
+import {
+  useLocalStore,
+  useObserver,
+  useAsObservableSource,
+  Observer
+} from "../k-mobx-react-lite/";
+
+function UseLocalStore(props) {
+  console.log("sss"); //sy-log
+  const newProps = {...props}; // useAsObservableSource(props);
+  // useLocalStore第一个参数是一个初始化函数，并且这个函数只会执行一次，并且在整个生命周期中都是有效的
+  const countStore = useLocalStore(
+    newProps => ({
+      count: props.init === undefined ? 0 : props.init,
+      add() {
+        this.count = this.count + 1;
+      },
+      get emoji() {
+        return this.count % 2 ? "😜" : "🏃";
+      },
+      get specialNum() {
+        return newProps.init > -1 && newProps.init < 10
+          ? "0" + newProps.init
+          : newProps.init;
+      }
+    }),
+    newProps
+  );
+  // return useObserver(() => (
+  //   <div className="border">
+  //     <h3>UseLocalStore</h3>
+  //     <button onClick={countStore.add}>count: {countStore.count}</button>
+  //     <p>{countStore.emoji}</p>
+  //     <p>{countStore.specialNum}</p>
+  //   </div>
+  // ));
+
+  // 局部控制
+  return (
+    <Observer>
+      {() => (
+        <div className="border">
+          <h3>UseLocalStore</h3>
+          <button onClick={countStore.add}>count: {countStore.count}</button>
+          <p>{countStore.emoji}</p>
+          <p>{countStore.specialNum}</p>
+        </div>
+      )}
+    </Observer>
+  );
 }
+export default UseLocalStore;
 ```
 
 
 
 
 
-
-
-
-
-
-
-
+### lesson9-实现mobx-react-lite的observer
 
 
 
@@ -734,7 +866,7 @@ export const Counter = observer(props => {
 
 
 
-
+lesson
 
 
 
