@@ -1,7 +1,14 @@
 import React, {Component, Children, useReducer} from "react";
-// import {observer, Observer, useObserver} from "mobx-react-lite";
 
-import {useObserver, Observer, observer} from "../k-mobx-react-lite/index";
+// import {observer as observerLite, Observer, useObserver} from "mobx-react-lite";
+// import {observer} from "mobx-react";
+
+import {
+  useObserver,
+  Observer,
+  observer as observerLite
+} from "../k-mobx-react-lite/index";
+import {observer} from "../k-mobx-react/index";
 
 // @observer
 class TodoList extends Component {
@@ -29,8 +36,27 @@ export default TodoList;
 
 // 如何给组件添加响应式
 // 方法1： observer hoc（高阶组件：接收组件为参数并且返回一个新组件的函数）
+// const Todo = observer(
+//   ({todo, change}, ref) => {
+//     console.log("input value", ref.current && ref.current.value); //sy-log
+//     return (
+//       <div>
+//         <input
+//           type="checkbox"
+//           checked={todo.finished}
+//           onChange={() => change(todo)}
+//         />
+//         {todo.title}
+//       </div>
+//     );
+//   },
+//   {forwardRef: true}
+// );
+
+// 自己配置forwardRef
 const Todo = observer(
-  ({todo, change}, ref) => {
+  React.forwardRef((props, ref) => {
+    const {todo, change} = props;
     console.log("input value", ref.current && ref.current.value); //sy-log
     return (
       <div>
@@ -42,8 +68,7 @@ const Todo = observer(
         {todo.title}
       </div>
     );
-  },
-  {forwardRef: true}
+  })
 );
 
 // // 方法2： Observer component
