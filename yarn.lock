@@ -7097,17 +7097,17 @@ mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@^0.5.3, mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.5"
 
-mobx-react-lite@2:
-  version "2.0.7"
-  resolved "https://registry.npm.taobao.org/mobx-react-lite/download/mobx-react-lite-2.0.7.tgz#1bfb3b4272668e288047cf0c7940b14e91cba284"
-  integrity sha1-G/s7QnJmjiiAR88MeUCxTpHLooQ=
+mobx-react-lite@>=2.2.0:
+  version "2.2.2"
+  resolved "https://registry.npm.taobao.org/mobx-react-lite/download/mobx-react-lite-2.2.2.tgz#87c217dc72b4e47b22493daf155daf3759f868a6"
+  integrity sha1-h8IX3HK05HsiST2vFV2vN1n4aKY=
 
-mobx-react@^6.2.2:
-  version "6.2.2"
-  resolved "https://registry.npm.taobao.org/mobx-react/download/mobx-react-6.2.2.tgz#45e8e7c4894cac8399bba0a91060d7cfb8ea084b"
-  integrity sha1-RejnxIlMrIOZu6CpEGDXz7jqCEs=
+mobx-react@^6.3.0:
+  version "6.3.0"
+  resolved "https://registry.npm.taobao.org/mobx-react/download/mobx-react-6.3.0.tgz#7d11799f988bbdadc49e725081993b18baa20329"
+  integrity sha1-fRF5n5iLva3EnnJQgZk7GLqiAyk=
   dependencies:
-    mobx-react-lite "2"
+    mobx-react-lite ">=2.2.0"
 
 mobx@^5.15.4:
   version "5.15.4"
