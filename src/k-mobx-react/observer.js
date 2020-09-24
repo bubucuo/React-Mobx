@@ -1,5 +1,6 @@
 import React from "react";
 import {Observer, observer as observerLite} from "../k-mobx-react-lite/index";
+import {makeClassComponentObserver} from "./observerClass";
 
 export function observer(component) {
   // forwardRef
@@ -12,6 +13,7 @@ export function observer(component) {
   }
   // 类组件
   if (component.prototype && component.prototype.isReactComponent) {
+    return makeClassComponentObserver(component);
   }
   // 函数组件
   return observerLite(component);

@@ -10,7 +10,7 @@ import {
 } from "../k-mobx-react-lite/index";
 import {observer} from "../k-mobx-react/index";
 
-// @observer
+@observer
 class TodoList extends Component {
   inputRef = React.createRef();
   render() {
