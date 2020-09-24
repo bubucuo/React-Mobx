@@ -2,7 +2,7 @@ import React, {useState} from "react";
 // import TimerView from "./pages/TimerView";
 // import appState from "./store/appState";
 import TodoList from "./pages/TodoList";
-import todoStore from "./store/todoStore";
+// import todoStore from "./store/todoStore";
 // import UseLocalStore from "./pages/UseLocalStore";
 
 export default function App(props) {
@@ -13,7 +13,12 @@ export default function App(props) {
         add countInit{countInit}
       </button> */}
       {/* <TimerView appState={appState} /> */}
-      <TodoList todoStore={todoStore} />
+      {/* <TodoList todoStore={todoStore} /> */}
+
+      {/* 通过Cntext */}
+
+      <TodoList />
+
       {/* <UseLocalStore init={countInit} /> */}
     </div>
   );

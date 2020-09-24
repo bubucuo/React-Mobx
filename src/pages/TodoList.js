@@ -1,36 +1,80 @@
 import React, {Component, Children, useReducer} from "react";
 
-// import {observer as observerLite, Observer, useObserver} from "mobx-react-lite";
-// import {observer} from "mobx-react";
+import {observer as observerLite, Observer, useObserver} from "mobx-react-lite";
+import {observer, inject, MobXProviderContext} from "mobx-react";
 
-import {
-  useObserver,
-  Observer,
-  observer as observerLite
-} from "../k-mobx-react-lite/index";
-import {observer} from "../k-mobx-react/index";
+// import {
+//   useObserver,
+//   Observer,
+//   observer as observerLite
+// } from "../k-mobx-react-lite/index";
+// import {observer} from "../k-mobx-react/index";
 
+// @inject("todoStore", "omg")
 @observer
 class TodoList extends Component {
+  //static contextType = MobXProviderContext;
   inputRef = React.createRef();
   render() {
+    // const {todoStore, omg} = this.context;
     return (
-      <div>
-        <h3>TodoList</h3>
-        <input type="text" ref={this.inputRef} />
-        {this.props.todoStore.todos.map(todo => (
-          <Todo
-            key={todo.id}
-            todo={todo}
-            change={this.props.todoStore.change}
-            ref={this.inputRef}
-          />
-        ))}
-        <p>未完成任务： {this.props.todoStore.unfinishedCount}个</p>
-      </div>
+      <MobXProviderContext.Consumer>
+        {({todoStore, omg}) => {
+          return (
+            <div>
+              <h3>TodoList</h3>
+              <input type="text" ref={this.inputRef} />
+              {todoStore.todos.map(todo => (
+                <Todo
+                  key={todo.id}
+                  todo={todo}
+                  change={todoStore.change}
+                  ref={this.inputRef}
+                />
+              ))}
+              <p>未完成任务： {todoStore.unfinishedCount}个</p>
+              <p>{omg}</p>
+            </div>
+          );
+        }}
+      </MobXProviderContext.Consumer>
     );
   }
 }
+
+// 使用inject给函数组件注入数据
+// const TodoList = inject(
+//   "todoStore",
+//   "omg"
+// )(
+//   observer(props => {
+//     return (
+//       <div>
+//         <h3>TodoList</h3>
+//         {props.todoStore.todos.map(todo => (
+//           <Todo key={todo.id} todo={todo} change={props.todoStore.change} />
+//         ))}
+//         <p>未完成任务： {props.todoStore.unfinishedCount}个</p>
+//         <p>{props.omg}</p>
+//       </div>
+//     );
+//   })
+// );
+
+// 使用useContext
+// const TodoList = observer(props => {
+//   const {todoStore, omg} = React.useContext(MobXProviderContext);
+//   return (
+//     <div>
+//       <h3>TodoList</h3>
+//       {todoStore.todos.map(todo => (
+//         <Todo key={todo.id} todo={todo} change={todoStore.change} />
+//       ))}
+//       <p>未完成任务： {todoStore.unfinishedCount}个</p>
+//       <p>{omg}</p>
+//     </div>
+//   );
+// });
 
 export default TodoList;
 
@@ -57,7 +101,7 @@ export default TodoList;
 const Todo = observer(
   React.forwardRef((props, ref) => {
     const {todo, change} = props;
-    console.log("input value", ref.current && ref.current.value); //sy-log
+    // console.log("input value", ref.current && ref.current.value); //sy-log
     return (
       <div>
         <input
