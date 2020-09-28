@@ -14,7 +14,7 @@
 
 5. [mobx-react-lite源码地址](https://github.com/mobxjs/mobx-react-lite)
 
-  ​    
+   ​    
 
 ## 关于库
 
@@ -544,7 +544,7 @@ export function useObserver(fn, baseComponentName = "observed", options = {}) {
 }
 ```
 
-#### 
+####  
 
 ### lesson6-实现mobx-react-lite的Observer与observer
 
@@ -801,128 +801,180 @@ export default UseLocalStore;
 
 
 
-### lesson9-实现mobx-react-lite的observer
+### lesson9-实现mobx-react的observer
 
+mobx-react@6以后，mobx-react的observer中会判断下是否是函数组件，如果是函数组件，则用的还是mobx-react-lite中的observer，如果是类组件，则调用makeClassComponentObserver。
 
+注意区分：目前mobx-react-lite@2.2中的observer有forwardRef配置项，但是目前mobx-react@6.3.0不支持，需要自己配置。
 
+实现代码如下：
 
+#### observer
 
+```js
+import React from "react";
+import {observer as observerLite, Observer} from "../k-mobx-react-lite/";
+import {makeClassComponentObserver} from "./observerClass";
 
+export function observer(component, options) {
+  // forwardRef
+  if (component["$$typeof"] === Symbol.for("react.forward_ref")) {
+    const baseRender = component["render"];
+    return React.forwardRef(function() {
+      const args = arguments;
+      return <Observer>{() => baseRender.apply(undefined, args)}</Observer>;
+    });
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-与observable无依赖关系
-
-本地的observable state可以使用useLocalStore，但是记住一点就是对于每个组件实例，useLocalStore的**初始化函数只会执行一次**，并且是在组件的整个生命周期里都有效。
-
-useLocalStore支持你传递一个非observable的plain object作为第二个参数存在这个store的衍生里，它可以是props、useContext甚至是useReducer。当然，这个参数必须得始终保持一种结构，不能用在条件语句中。
-
-注：useLocalStore与useAsObservableSource的区别在于后者只能用于object，如果你不需要action和computed属性，那完全可以使用后者。
-
-```tsx
-import { observer, useLocalStore } from 'mobx-react' // 6.x
-
-export const Counter = observer(props => {
-  const store = useLocalStore(
-    // don't ever destructure source, it won't work
-    source => ({
-      count: props.initialCount,
-      get multiplied() {
-        // you shouldn't ever refer to props directly here, it won't see a change
-        return source.multiplier * store.count
-      },
-      inc() {
-        store.count += 1
-      },
-    }),
-    props, // note props passed here
-  )
-  return (
-    <>
-      <button id="inc" onClick={store.inc}>
-        {`Count: ${store.count}`}
-      </button>
-      <span>{store.multiplied}</span>
-    </>
-  )
-})
+  // 函数组件
+  if (
+    (typeof component === "function" && !component.prototype) ||
+    !component.prototype.render
+  ) {
+    return observerLite(component, options);
+  }
+  // 类组件
+  return makeClassComponentObserver(component);
+}
 ```
 
 
 
-lesson
+#### makeClassComponentObserver
+
+```js
+import {Reaction} from "mobx";
+import React, {Component} from "react";
+
+export function makeClassComponentObserver(componentClass) {
+  const target = componentClass.prototype;
+
+  const baseRender = target.render;
+  target.render = function() {
+    return makeComponentReactive.call(this, baseRender);
+  };
+  return componentClass;
+}
+
+function makeComponentReactive(render) {
+  const baseRender = render.bind(this);
+  let isRenderingPending = false;
+  const reaction = new Reaction(`${this.constructor.name}.render`, () => {
+    if (!isRenderingPending) {
+      isRenderingPending = true;
+      Component.prototype.forceUpdate.call(this);
+    }
+  });
+
+  this.render = reactiveRender;
+
+  function reactiveRender() {
+    isRenderingPending = false;
+    let rendering = undefined;
+    reaction.track(() => {
+      rendering = baseRender();
+    });
+
+    return rendering;
+  }
+
+  return reactiveRender.call(this);
+}
+```
 
 
 
+### lesson10-mobx-react的Provider、inject的使用
+
+`Provider`是个能够传递store的组件，也支持传递其他非store数据，其实现机制就是React的Context跨层级传递。如果你有一些需要跨层级数据需要传递，可以考虑下这个组件。
+
+`inject`可以用于提取你传输的数据的store，本质上是个高阶组件（hoc）。
+
+参考下面的例子：
+
+```jsx
+@inject("color")
+@observer
+class Button extends React.Component {
+    render() {
+        return <button style={{ background: this.props.color }}>{this.props.children}</button>
+    }
+}
+
+class Message extends React.Component {
+    render() {
+        return (
+            <div>
+                {this.props.text} <Button>Delete</Button>
+            </div>
+        )
+    }
+}
+
+class MessageList extends React.Component {
+    render() {
+        const children = this.props.messages.map(message => <Message text={message.text} />)
+        return (
+            <Provider color="red">
+                <div>{children}</div>
+            </Provider>
+        )
+    }
+}
+```
+
+注意：
+
+- 读取Provider提供的数据不是非得用inject，用React.useContext(MobXProviderContext)也可以，MobXProviderContext来自mobx-react。
+- 使用inject和observer的时候，注意顺序，observer应该是内部，inject在外面。
 
 
 
+### lesson11-实现mobx-react的Provider、inject
+
+Provider基于Context与组件复合
+
+```js
+import React, {useRef, useContext} from "react";
+import {MobXProviderContext} from "./MobXProviderContext";
+
+export function Provider({children, ...stores}) {
+  const parentValue = useContext(MobXProviderContext);
+  const mutableProvdierRef = useRef({...parentValue, ...stores});
+  const value = mutableProvdierRef.current;
+
+  return (
+    <MobXProviderContext.Provider value={value}>
+      {children}
+    </MobXProviderContext.Provider>
+  );
+}
+```
+
+inject基于高阶组件
+
+```js
+import React, {useContext} from "react";
+import {MobXProviderContext} from "./MobXProviderContext";
+
+export const inject = (...storeNames) => component => {
+  const Injector = React.forwardRef((props, ref) => {
+    const context = useContext(MobXProviderContext);
+    const newProps = {
+      ...props,
+      ...context
+    };
+    if (ref) {
+      newProps.ref = ref;
+    }
+    return React.createElement(component, newProps);
+  });
+
+  return Injector;
+};
+```
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-mobx-react opt-in variant of batched updates
-
-https://github.com/mobxjs/mobx-react/pull/787
-
-
-
-简单来说，我觉得你可以在mobx-react禁止掉它，然后去跑单元测试，你就会发现有些单元测试会通不过，比如https://github.com/mobxjs/mobx-react/blob/master/test/observer.test.js#L639。
-
-以下是我观点：
-
-1. 渲染两个基于observer的组件<Parent><Child /></Parent>。（另外，你也可以用普通的react state）。
-
-2. 确保parent和child依赖于同一个可观察量（observable）（在单元测试里是store.user）。
-
-3. 确保child有依赖于parent的地方。（在单元测试里，如果store.user不改变，则parent不会重新渲染child）。
-
-4. 更改这个共享的可观察量。如设置store.user为undefined，则两个组件都要因为这个改变发生更新。然而，Parent必须在Child前面更新，因为Parent接下来要移除Child并且确保它不会再发生更新。而如果是Child先渲染，那么它会获store.user的name属性，这肯定会抛出异常；如果user没有发生改变，Child就不该渲染，而如果Parent先发生渲染的话则不会引发这样的异常了。
-
-5. 一般来说，React会确保父组件总是在子组件前面渲染，它这么实现的原理就是把事件处理批量化（与MobX中的action非常相似）。因此在事件处理的末尾，所有组件的更新都被React按照正确的顺序调度之后再渲染，这也保证了在大多数情况下，父组件总是先与子组件渲染。
-
-6. 然而，如果有这样一个更新，它不是源于React事件处理，那么这个批量处理就永远不可能发生。例如：如果NIIT在事件处理里放了一个timeout或者是在fetch回调里放了一个更新、websocket信息等等，它们会在React里执行，但是如果要确保批量处理顺序不会被破坏，我们就需要手动使用`unstable_batchedUpdates`来做批量更新。幸运的是，由于mobx已经有了一个批量处理机制，我们就可以直接合并它们俩了，这也就是这整个的工作机制，把react的更新应用到我们自己的事件循环当中。注意这也是React单元测试中需要用`act`的原因。
-
-7. 因此，这种情况不会发生在所有的项目当中。这种场景只发生下父子组件+非React事件处理的结合的前提下
-
-   
+  
 
