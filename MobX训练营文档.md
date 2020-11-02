@@ -1085,7 +1085,93 @@ export const Counter = observer(props => {
 
 
 
-lesson
+### lesson-13mobx与redux
+
+#### mobx
+
+它通过透明的函数响应式编程(transparently applying functional reactive programming - TFRP)使得状态管理变得简单和可扩展。MobX背后的哲学很简单:
+
+*任何源自应用状态的东西都应该自动地获得。*
+
+![MobX unidirectional flow](https://cn.mobx.js.org/flow.png)
+
+
+
+#### redux
+
+Redux 是 JavaScript 状态容器，提供可预测化的状态管理。
+
+![image-20200222151958879](https://tva1.sinaimg.cn/large/0082zybply1gc57dy6j70j31240netja.jpg)
+
+
+
+Redux 除了和 [React](https://facebook.github.io/react/) 一起用外，还支持其它界面库。 它体小精悍（只有2kB，包括依赖）。
+
+应用中所有的 state 都以一个对象树的形式储存在一个单一的 *store* 中。 惟一改变 state 的办法是触发 *action*，一个描述发生什么的对象。 为了描述 action 如何改变 state 树，你需要编写 *reducers*。
+
+##### redux三大原则
+
+###### 单一数据源
+
+整个应用的 state 被储存在一棵 object tree 中，并且这个 object tree 只存在于唯一一个 store 中。
+
+###### State 是只读的
+
+唯一改变 state 的方法就是触发 action，action 是一个用于描述已发生事件的普通对象。
+
+###### 使用纯函数来执行修改
+
+为了描述 action 如何改变 state tree ，你需要编写 reducers。
+
+
+
+#### 不同
+
+##### 设计思想不同
+
+Redux遵循函数式编程（Functional Programming, FP）思想，而MobX设计更多偏向于面向对象编程（OOP）和响应式编程（Reactive Programming），MobX中将状态包装成可观察对象，再使用可观察对象的所有能力，一旦状态对象变更，更新就能被自动获得。
+
+
+
+##### 对store管理的不同
+
+在Redux应用中，所有共享的应用数据都集中在一个大的store中，而MboX则通常按模块将应用状态划分，在多个独立的store中管理。
+
+
+
+##### 工作方式不同
+
+Redux中用js对象存储状态数据，并且手动追踪状态变更，而MobX中会把状态数据转化为可观察的对象，当状态发生变化，自动触发监听。
+
+
+
+##### 状态修改方式
+
+Redux中的不可以直接修改状态，只能通过dispatch派发事件修改，而MobX中则可以直接修改，也可以通过action修改，比较”灵活“，但是这种灵活不利于项目管理与维护，因此建议还是开启严格模式，从而禁止掉直接修改状态的方式，并且制定状态管理规范。
+
+
+
+##### 不可变（Immutable）和可变（Mutable）
+
+Redux状态对象通常是不可变的（Immutable），我们使用reducers，并且在原来对象的基础上返回一个新的状态对象，这样就能很方便的返回上一个状态，但是MobX中则可由直接使用新值更新状态对象。
+
+
+
+##### mobx-react和react-reudx
+
+各自都有React绑定库，且绑定库设计与思想相似，react-redux中有Provider与connect，mobx-react中有Provider和inject，都有Context和HOC设计，后期都可以用hooks代替。
+
+
+
+##### 体积不同
+
+Redux体小精悍、周边配合库非常丰富，如redux-thunk中间件等。mobx库则功能强大，自己就能独立完成很多功能，如异步等。
+
+
+
+#### 总结
+
+如果你不懂Redux中的reducers、中间件等这些概念，`MobX`入门也许相对简单，构建项目当然也很快，但是当项目足够大的时候，其实难度不会天差地别，都需要开发者对库本身能有深刻的理解。目前更多人选择使用Redux，尤其是大型项目，而选择MobX的则中小型项目多一些，MobX好理解、自由，这当然是个优势，但是同时也带来了劣势，过于自由对于项目管理当然是巨大的缺点，因此使用MobX需要开发者约定规范。所以，我个人认为，选择MobX还是Redux用于状态管理，或者你有第三第四个别的选择，根据自己的项目和个人对于各自库的掌握度来做选择就可以了。
 
 
 
@@ -1119,29 +1205,9 @@ lesson
 
 
 
-mobx-react opt-in variant of batched updates
-
-https://github.com/mobxjs/mobx-react/pull/787
 
 
 
-简单来说，我觉得你可以在mobx-react禁止掉它，然后去跑单元测试，你就会发现有些单元测试会通不过，比如https://github.com/mobxjs/mobx-react/blob/master/test/observer.test.js#L639。
 
-以下是我观点：
-
-1. 渲染两个基于observer的组件<Parent><Child /></Parent>。（另外，你也可以用普通的react state）。
-
-2. 确保parent和child依赖于同一个可观察量（observable）（在单元测试里是store.user）。
-
-3. 确保child有依赖于parent的地方。（在单元测试里，如果store.user不改变，则parent不会重新渲染child）。
-
-4. 更改这个共享的可观察量。如设置store.user为undefined，则两个组件都要因为这个改变发生更新。然而，Parent必须在Child前面更新，因为Parent接下来要移除Child并且确保它不会再发生更新。而如果是Child先渲染，那么它会获store.user的name属性，这肯定会抛出异常；如果user没有发生改变，Child就不该渲染，而如果Parent先发生渲染的话则不会引发这样的异常了。
-
-5. 一般来说，React会确保父组件总是在子组件前面渲染，它这么实现的原理就是把事件处理批量化（与MobX中的action非常相似）。因此在事件处理的末尾，所有组件的更新都被React按照正确的顺序调度之后再渲染，这也保证了在大多数情况下，父组件总是先与子组件渲染。
-
-6. 然而，如果有这样一个更新，它不是源于React事件处理，那么这个批量处理就永远不可能发生。例如：如果NIIT在事件处理里放了一个timeout或者是在fetch回调里放了一个更新、websocket信息等等，它们会在React里执行，但是如果要确保批量处理顺序不会被破坏，我们就需要手动使用`unstable_batchedUpdates`来做批量更新。幸运的是，由于mobx已经有了一个批量处理机制，我们就可以直接合并它们俩了，这也就是这整个的工作机制，把react的更新应用到我们自己的事件循环当中。注意这也是React单元测试中需要用`act`的原因。
-
-7. 因此，这种情况不会发生在所有的项目当中。这种场景只发生下父子组件+非React事件处理的结合的前提下
-
-    
+1. 
 
